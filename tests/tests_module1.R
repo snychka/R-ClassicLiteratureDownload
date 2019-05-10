@@ -20,42 +20,47 @@ for (line in parsed) {
 }
 
 context('Module 01')
-test_that('@arrange_by_download', {
+test_that('@find-twains-works', {
 })
 
-test_that('@select_relevant_variables', {
-  expect('titles' %in% ls(envir = user), glue('Does the `titles` data frame exist in `{user_source_file}`?'))
+test_that('@select-relevant-columns', {
 })
 
-test_that('@top_ten_authors', {
+test_that('@arrange-by-download', {
 })
 
-test_that('@filtering', {
+test_that('@create-function', {
 })
 
-test_that('@mutate_flesch_reading_ease', {
+test_that('@pull', {
 })
 
-test_that('@mutate_flesch_reading_grade_level', {
+test_that('@empty-list', {
 })
 
-test_that('@grouping_by_author', {
+test_that('@for-loop', {
 })
 
-test_that('@summarising_reading_statistics', {
+test_that('@fuzzy-matching', {
 })
 
-test_that('@gather', {
+test_that('@add-list', {
 })
 
-test_that('@gather', {
+test_that('@remove-duplicates', {
 })
 
-test_that('@initialize_plot', {
+test_that('@call-function', {
 })
 
-test_that('@faceting_bar_plot', {
+test_that('@initialize-plot', {
 })
 
-test_that('@customizing_plot', {
+test_that('@add-component', {
+})
+
+test_that('@aesthetic-mappings', {
+})
+
+test_that('@geom-aesthetic-mappings', {
 })
