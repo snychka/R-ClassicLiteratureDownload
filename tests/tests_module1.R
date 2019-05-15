@@ -11,8 +11,6 @@ source('download.R', local = user)
 
 parsed <- parse_exprs(file('download.R'))
 
-ggplot_args <- NULL
-
 for (line in parsed) {
   arg_list <- call_args(line)
   
@@ -25,7 +23,7 @@ for (line in parsed) {
     }
     
     if(length(right) >= 3) {
-      if(right[[1]] == '+' && is_call(right[[2]], 'ggplot') && is_call(right[[3]], 'geom_point', 1)){
+      if(right[[1]] == '+' && is_call(right[[2]], 'ggplot') && is_call(right[[3]], 'geom_point')){
         ggplot_args <- call_args(right[[2]])
         ggplot_named_args <- call_standardise(right[[2]])
         if(is_call(ggplot_named_args$mapping, 'aes')) {
@@ -38,6 +36,33 @@ for (line in parsed) {
   }
   
   plot_arg <- ifelse(is_call(line, 'plot', 1), arg_list, '')
+}
+
+walkAST <- function(expr, args) {
+  if(is_closure(expr)) {
+    lines <- parse_expr(deparse(body(expr)))
+  } else {
+    lines <- expr
+  }
+  
+  for (cc in seq_along(lines)) {
+    line <- lines[[cc]]
+    if(is_call(line)) {
+      this_operator <- line[[1]]
+      this_left <- line[[2]]
+      this_right <- line[[3]]
+      if(this_left == args[[1]] && this_operator == args[[2]] &&  this_right == args[[3]]) {
+        return(TRUE)
+      }
+      if(line[[1]] == 'for' && args[[1]] == 'for') {
+        print(line)
+        if(walkAST(line, args[[2]])) {
+          return(TRUE)
+        }
+      }
+    }
+  }
+  return(FALSE)
 }
 
 context('Module 01')
@@ -66,21 +91,23 @@ test_that('Create a Function @create-function', {
 
 test_that('Pull the Correct Column @pull', {
   expect(is_function(user$unique_books), 'Have you defined a function called `unique_books`?')
+  alternative <- walkAST(user$unique_books, list('items', '<-', 'data %>% pull(column)')) || walkAST(user$unique_books, list('items', '<-', 'pull(data, column)'))
+  expect(alternative, 'Have you `pull`ed the `column` and stored it in a varaible called `items`?')
 })
 
 test_that('Create an Empty List @empty-list', {
   expect(is_function(user$unique_books), 'Have you defined a function called `unique_books`?')
-  
+  expect(walkAST(user$unique_books, list('duplicates', '<-', 'list()')), 'Have you created an empty list called `duplicates`?')
 })
 
 test_that(' Create a For Loop @for-loop', {
   expect(is_function(user$unique_books), 'Have you defined a function called `unique_books`?')
-  
+  expect(walkAST(user$unique_books, list('item', 'for', 'items')), 'Have you created a `for` loop to loop through `items`?')
 })
 
 test_that('Fuzzy Matching @fuzzy-matching', {
   expect(is_function(user$unique_books), 'Have you defined a function called `unique_books`?')
-  
+  expect(walkAST(user$unique_books, list('for', list('match', '<-', 'agrep(item, items)'))), 'Have you created a `for` loop to loop through `items`?')
 })
 
 test_that('Add Elements to a List @add-list', {
@@ -90,7 +117,8 @@ test_that('Add Elements to a List @add-list', {
 
 test_that('Remove Duplicates @remove-duplicates', {
   expect(is_function(user$unique_books), 'Have you defined a function called `unique_books`?')
-  
+  expect(walkAST(user$unique_books, list('remove', '<-', 'unique(unlist(duplicates))')), 'Have you converted the `duplicates` list to a vector. Make sure all values are unique with the `unique()` function?')
+  expect(walkAST(user$unique_books, list('data', '[', '-remove')), 'Have you removed the duplicates from the `data` data frame?')
 })
 
 test_that('Call a Function @call-function', {
@@ -115,4 +143,8 @@ test_that('Aesthetic Mappings @aesthetic-mappings', {
 })
 
 test_that('Geom Aesthetic Mappings @geom-aesthetic-mappings', {
+  expect(length(geom_point_args) != 0, 'Have you added the proper arguments to the `geom_point()` function?')
+  geom_point_aes <- call_standardise(geom_point_args$mapping)
+  expect(length(geom_point_aes$size) != 0, 'Have you added the `size` mapping to the `aes()` function?')
+  expect(geom_point_aes$size == 'downloads', 'Have you added the `size` mapping to the `aes()` function?')
 })
