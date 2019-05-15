@@ -5,10 +5,9 @@ library(ggplot2)
 
 books <- read_csv('data/books.csv')
 
-twain <- books %>%
-  filter(str_detect(author, 'Twain')) %>%
-  select(title, author, downloads, avg_words_per_sentence, sentences) %>%
-  arrange(desc(downloads))
+twain <- books %>% filter(str_detect(author, 'Twain'))
+twain_refined <- twain %>% select(title, author, downloads, avg_words_per_sentence, sentences)
+twain_by_download <- twain_refined %>% arrange(desc(downloads))
 
 unique_books <- function(data, column = 'title'){
   items <- data %>% pull(column)
