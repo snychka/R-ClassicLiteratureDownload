@@ -11,6 +11,8 @@ source('download.R', local = user)
 
 parsed <- parse_exprs(file('download.R'))
 
+ggplot_args <- NULL
+
 for (line in parsed) {
   arg_list <- call_args(line)
   
@@ -38,14 +40,6 @@ for (line in parsed) {
   plot_arg <- ifelse(is_call(line, 'plot', 1), arg_list, '')
 }
 
-parse_function <- function(func) {
-  expr <- parse_expr(deparse(body(func)))
-  for (cc in seq_along(expr)) {
-    print(expr[[cc]])
-  }
-}
-  
-
 context('Module 01')
 test_that('Find Twain\'s Works @find-twains-works', {
   expect('twain' %in% ls(envir = user), 'Does the `twain` data frame exist in `download.R`?')
@@ -72,7 +66,6 @@ test_that('Create a Function @create-function', {
 
 test_that('Pull the Correct Column @pull', {
   expect(is_function(user$unique_books), 'Have you defined a function called `unique_books`?')
-  print(parse_function(user$unique_books))
 })
 
 test_that('Create an Empty List @empty-list', {
