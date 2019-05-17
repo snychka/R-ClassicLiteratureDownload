@@ -13,6 +13,9 @@ source('download.R', local = user)
 parsed <- parse_exprs(file('download.R'))
 
 unique_books_called <- FALSE
+ggplot_check <- 0
+ggplot_named_check <- 0
+geom_point_check <- 0
 
 for (line in parsed) {
   arg_list <- call_args(line)
@@ -27,12 +30,20 @@ for (line in parsed) {
     
     if(length(right) >= 3) {
       if(right[[1]] == '+' && is_call(right[[2]], 'ggplot') && is_call(right[[3]], 'geom_point')){
+        
         ggplot_args <- call_args(right[[2]])
+        ggplot_check <- length(ggplot_args)
+        
         ggplot_named_args <- call_standardise(right[[2]])
+        ggplot_named_check <- length(ggplot_named_args)
+        
         if(is_call(ggplot_named_args$mapping, 'aes')) {
           aes_args <- call_standardise(ggplot_named_args$mapping)
         }
+
         geom_point_args <- call_standardise(right[[3]])
+        geom_point_check <- length(geom_point_args)
+        
         ggplot_called_zero <- TRUE
       }
     }
@@ -153,11 +164,12 @@ test_that('Initialize a Plot Object @initialize-plot', {
 })
 
 test_that('Adding a Component @add-component', {
-  expect(exists('geom_point_args'), 'Was the `geom_point()` function added to `ggplot()`?')
+  expect(geom_point_check != 0, 'Was the `geom_point()` function added to `ggplot()`?')
 })
 
 test_that('Aesthetic Mappings @aesthetic-mappings', {
-  expect(length(ggplot_args) != 0, 'Have you added the proper arguments to the `ggplot()` function?')
+  expect(ggplot_check != 0, 'Have you added the proper arguments to the `ggplot()` function?')
+  expect(ggplot_named_check != 0, 'Have you added the proper arguments to the `ggplot()` function?')
   expect(ggplot_named_args$data == 'twain_unique', 'Are you passing the `twain_unique` data frame to the `ggplot()` function?')
   expect(exists('aes_args'), 'Have you passed a call to the `aes()` function as the second argument to the `ggplot()` function?')
   expect(aes_args$x == 'sentences', 'Was the `sentences` column passed to the `aes()` function?')
@@ -165,7 +177,7 @@ test_that('Aesthetic Mappings @aesthetic-mappings', {
 })
 
 test_that('Geom Aesthetic Mappings @geom-aesthetic-mappings', {
-  expect(length(geom_point_args) != 0, 'Have you added the proper arguments to the `geom_point()` function?')
+  expect(geom_point_check != 0, 'Have you added the proper arguments to the `geom_point()` function?')
   geom_point_aes <- call_standardise(geom_point_args$mapping)
   expect(length(geom_point_aes$size) != 0, 'Have you added the `size` mapping to the `aes()` function?')
   expect(geom_point_aes$size == 'downloads', 'Have you added the `size` mapping to the `aes()` function?')
