@@ -17,6 +17,7 @@ ggplot_check <- 0
 ggplot_named_check <- 0
 geom_point_check <- 0
 geom_point_mapping_check <- FALSE
+plot_arg <- ''
 
 for (line in parsed) {
   arg_list <- call_args(line)
@@ -55,7 +56,9 @@ for (line in parsed) {
     }
   }
 
-  plot_arg <- ifelse(is_call(line, 'plot', 1), arg_list, '')
+  if (is_call(line, 'plot', 1)) {
+    plot_arg <- arg_list
+  }
   
 }
 
