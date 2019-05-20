@@ -16,6 +16,7 @@ unique_books_called <- FALSE
 ggplot_check <- 0
 ggplot_named_check <- 0
 geom_point_check <- 0
+geom_point_mapping_check <- FALSE
 
 for (line in parsed) {
   arg_list <- call_args(line)
@@ -44,6 +45,11 @@ for (line in parsed) {
         geom_point_args <- call_standardise(right[[3]])
         geom_point_check <- length(geom_point_args)
         
+        if(!is.null(geom_point_args$mapping)) {
+          geom_point_mapping_check <- TRUE
+          geom_point_aes <- call_standardise(geom_point_args$mapping)
+        }
+      
         ggplot_called_zero <- TRUE
       }
     }
@@ -107,14 +113,14 @@ test_that('Select Relevant Columns @select-relevant-columns', {
 
 test_that('Arrange Books by Download @arrange-by-download', {
   expect('twain_by_download' %in% ls(envir = user), 'Does the `twain_by_download` data frame exist in `download.R`?')
-  expect(isTRUE(all_equal(user$twain_by_download, solution$twain_by_download)), 'The `twain_by_download` data frame does not contain the correct data or columns.')
+  expect(isTRUE(all_equal(user$twain_by_download, solution$twain_by_download, ignore_row_order = FALSE)), 'The `twain_by_download` data frame does not contain the correct data or columns. Or the data is not in the correct order.')
 })
 
 test_that('Create a Function @create-function', {
   expect(is_function(user$unique_books), 'Have you defined a function called `unique_books`?')
   defined_args <- formals(user$unique_books)
   expect(is_symbol(defined_args$data), 'Is the first parameter in the `unique_books` function definition named `data`?')
-  expect(is_character(defined_args$column), 'Is the second parameter in the `unique_books` function definition named `column`?')
+  expect(is_character(defined_args$column), 'Is the second parameter in the `unique_books` function definition named `column`? Does it have a default value of `title`?')
   expect(defined_args$column == 'title', 'Is the second parameter `column` set to `\'title\'`?')
 })
 
@@ -142,7 +148,7 @@ test_that('Fuzzy Matching @fuzzy-matching', {
 
 test_that('Add Elements to a List @add-list', {
   expect(is_function(user$unique_books), 'Have you defined a function called `unique_books`?')
-  expect(walkAST(user$unique_books, list('for', list('if', 'length(last)', ''))), 'Do you have an `if` statement that checks the `length`` of the `match` list?')
+  expect(walkAST(user$unique_books, list('for', list('if', 'length(last)', ''))), 'Do you have an `if` statement that checks the `length` of `last`?')
   expect(walkAST(user$unique_books, list('for', list('if', 'length(last)', list('duplicates[[last]]', '<-', 'last')))), 'In the body of an `if` statement are you adding the `last` variable to the `duplicates` list?')
 })
 
@@ -178,7 +184,7 @@ test_that('Aesthetic Mappings @aesthetic-mappings', {
 
 test_that('Geom Aesthetic Mappings @geom-aesthetic-mappings', {
   expect(geom_point_check != 0, 'Have you added the proper arguments to the `geom_point()` function?')
-  geom_point_aes <- call_standardise(geom_point_args$mapping)
-  expect(length(geom_point_aes$size) != 0, 'Have you added the `size` mapping to the `aes()` function?')
-  expect(geom_point_aes$size == 'downloads', 'Have you added the `size` mapping to the `aes()` function?')
+  expect(geom_point_mapping_check, 'Have you added the proper arguments to the `geom_point()` function?')
+  expect(geom_point_mapping_check && length(geom_point_aes$size) != 0, 'Have you added the `size` mapping to the `aes()` function?')
+  expect(geom_point_mapping_check && geom_point_aes$size == 'downloads', 'Have you added the `size` mapping to the `aes()` function?')
 })
